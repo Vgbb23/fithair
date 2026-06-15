@@ -146,6 +146,10 @@ export async function handlePixChargePost(body: unknown): Promise<{ status: numb
     }
 
     const tracking = mergeTrackingPayload(utm, urlParamsBody);
+    // `amount` já é o total do pedido (kit × qtd + frete + bumps) em centavos.
+    // A Fruitfy trata `value` como preço unitário e multiplica por `quantity`,
+    // então enviamos sempre quantity=1 para não cobrar em dobro.
+    const orderTotalCents = Math.round(parsedAmount);
     const fruitfyBody: Record<string, unknown> = {
       name: String(name),
       email: String(email),
@@ -154,8 +158,8 @@ export async function handlePixChargePost(body: unknown): Promise<{ status: numb
       items: [
         {
           id: FRUITFY_PRODUCT_ID,
-          value: Math.round(parsedAmount),
-          quantity: Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1,
+          value: orderTotalCents,
+          quantity: 1,
         },
       ],
     };
